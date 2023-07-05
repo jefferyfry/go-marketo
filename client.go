@@ -237,6 +237,9 @@ func (c *Client) doWithRetry(req *http.Request) (response *Response, err error) 
 		return nil, err
 	}
 
+	if c.debug {
+		log.Printf("[marketo/doWithRetry] response: %v", response)
+	}
 	// check just in case we received 601 or 602
 	retry, err := c.checkToken(response)
 	if err != nil {
