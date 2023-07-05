@@ -1,4 +1,5 @@
-module github.com/jefferyfry/go-marketo
+module github.com/polytomic/go-marketo
+replace github.com/polytomic/go-marketo => github.com/jefferyfry/go-marketo
 
 go 1.15
 
