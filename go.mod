@@ -6,5 +6,6 @@ require (
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.7.0
+	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df // indirect
 	gopkg.in/h2non/gock.v1 v1.0.15
 )

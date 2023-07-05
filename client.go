@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"golang.org/x/exp/slog"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -238,7 +239,7 @@ func (c *Client) doWithRetry(req *http.Request) (response *Response, err error) 
 	}
 	respJson, _ := json.Marshal(response)
 	if c.debug {
-		log.Printf("[marketo/doWithRetry] response: %v", respJson)
+		slog.Info("doWithRetry", "respJson", respJson)
 	}
 	// check just in case we received 601 or 602
 	retry, err := c.checkToken(response)
