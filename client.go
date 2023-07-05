@@ -220,6 +220,7 @@ func (c *Client) do(req *http.Request) (response *Response, err error) {
 	if err = json.Unmarshal(body, &response); err != nil {
 		return nil, err
 	}
+	slog.Info("[marketo/do] DONE: response ", response)
 	return response, nil
 }
 
