@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"golang.org/x/exp/slog"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -155,9 +154,9 @@ func NewClient(config ClientConfig) (*Client, error) {
 // This is purely for testing purpose and not intended to be used.
 func (c *Client) RefreshToken() (auth AuthToken, err error) {
 	if c.debug {
-		log.Printf("[marketo/RefreshToken] start")
+		slog.Info("[marketo/RefreshToken] start")
 		defer func() {
-			log.Print("[marketo/RefreshToken] DONE")
+			slog.Info("[marketo/RefreshToken] DONE")
 		}()
 	}
 	// Make request for token
@@ -178,7 +177,7 @@ func (c *Client) RefreshToken() (auth AuthToken, err error) {
 		return auth, errors.New("Unable to decode marketo error token")
 	}
 	if c.debug {
-		log.Printf("[marketo/RefreshToken] New token: %v", auth)
+		slog.Info("[marketo/RefreshToken] New token:", auth)
 	}
 	c.authLock.Lock()
 	defer c.authLock.Unlock()
@@ -195,9 +194,9 @@ func (c *Client) url(paths ...string) string {
 func (c *Client) do(req *http.Request) (response *Response, err error) {
 	var body []byte
 	if c.debug {
-		log.Printf("[marketo/do] URL: %s", req.URL)
+		slog.Info("[marketo/do] URL:", req.URL)
 		defer func() {
-			log.Printf("[marketo/do] DONE: body %s", string(body))
+			slog.Info("[marketo/do] DONE: body ", string(body))
 		}()
 	}
 	resp, err := c.restClient.Do(req)
@@ -228,7 +227,7 @@ func (c *Client) doWithRetry(req *http.Request) (response *Response, err error) 
 	// check if token has been expired or not
 	if c.tokenExpiresAt.Before(time.Now()) {
 		if c.debug {
-			log.Printf("[marketo/doWithRetry] token expired at: %s", c.tokenExpiresAt.String())
+			slog.Info("[marketo/doWithRetry] token expired at:", c.tokenExpiresAt.String())
 		}
 		c.RefreshToken()
 	}
@@ -257,7 +256,7 @@ func (c *Client) doRequest(req *http.Request) (response *http.Response, err erro
 	// check if token has been expired or not
 	if c.tokenExpiresAt.Before(time.Now()) {
 		if c.debug {
-			log.Printf("[marketo/doWithRetry] token expired at: %s", c.tokenExpiresAt.String())
+			slog.Info("[marketo/doWithRetry] token expired at:", c.tokenExpiresAt.String())
 		}
 		c.RefreshToken()
 	}
@@ -274,7 +273,7 @@ func (c *Client) checkToken(response *Response) (retry bool, err error) {
 	if len(response.Errors) > 0 && (response.Errors[0].Code == "601" || response.Errors[0].Code == "602") {
 		retry = true
 		if c.debug {
-			log.Printf("[marketo/checkToken] Expired/invalid token: %s", response.Errors[0].Code)
+			slog.Info("[marketo/checkToken] Expired/invalid token:", response.Errors[0].Code)
 		}
 		_, err = c.RefreshToken()
 	}
@@ -284,9 +283,9 @@ func (c *Client) checkToken(response *Response) (retry bool, err error) {
 // Get performs an HTTP GET for the specified resource url
 func (c *Client) Get(resource string) (response *Response, err error) {
 	if c.debug {
-		log.Printf("[marketo/Get] %s", resource)
+		slog.Info("[marketo/Get] ", resource)
 		defer func() {
-			log.Print("[marketo/Get] DONE")
+			slog.Info("[marketo/Get] DONE")
 		}()
 	}
 	req, err := http.NewRequest("GET", c.endpoint+resource, nil)
@@ -299,9 +298,9 @@ func (c *Client) Get(resource string) (response *Response, err error) {
 // Post performs an HTTP POST to the specified resource url with given data
 func (c *Client) Post(resource string, data []byte) (response *Response, err error) {
 	if c.debug {
-		log.Printf("[marketo/Post] %s, %s", resource, string(data))
+		slog.Info("[marketo/Post] ", resource, string(data))
 		defer func() {
-			log.Print("[marketo/Post] DONE")
+			slog.Info("[marketo/Post] DONE")
 		}()
 	}
 	req, err := http.NewRequest("POST", c.endpoint+resource, bytes.NewBuffer(data))
@@ -310,15 +309,15 @@ func (c *Client) Post(resource string, data []byte) (response *Response, err err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	return c.doWithRetry(req)
+	return c.do(req)
 }
 
 // Delete sends an HTTP DELETE request to specified resource url with given data
 func (c *Client) Delete(resource string, data []byte) (response *Response, err error) {
 	if c.debug {
-		log.Printf("[marketo/Delete] %s, %s", resource, string(data))
+		slog.Info("[marketo/Delete] ", resource, string(data))
 		defer func() {
-			log.Print("[marketo/Delete] DONE")
+			slog.Info("[marketo/Delete] DONE")
 		}()
 	}
 	req, err := http.NewRequest("DELETE", c.endpoint+resource, bytes.NewBuffer(data))
